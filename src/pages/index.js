@@ -287,6 +287,214 @@
 //     );
 // }
 
+
+
+
+// 'use client';
+
+// import React, { useState, useEffect } from "react";
+// import CarouselComponent from "@/components/home/Carousel";
+// import Card from "@/components/home/Card";
+// import { useAuth } from "@/utils/AuthContext";
+// import About from '@/components/layouts/About';
+
+// export default function Home() {
+//     const { user } = useAuth();
+//     const [products, setProducts] = useState([]);
+//     const [loading, setLoading] = useState(true);
+
+//     // Filter & Sort States
+//     const [selectedGender, setSelectedGender] = useState('All');
+//     const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+//     const [selectedCategories, setSelectedCategories] = useState([]);
+//     const [selectedColors, setSelectedColors] = useState([]);
+//     const [selectedFabrics, setSelectedFabrics] = useState([]);
+//     const [priceBounds, setPriceBounds] = useState({ min: 0, max: 5000 });
+//     const [priceRange, setPriceRange] = useState({ min: 0, max: 5000 });
+//     const [sortOrder, setSortOrder] = useState('default');
+//     const [searchTerm, setSearchTerm] = useState("");
+//     const [selectedCollections, setSelectedCollections] = useState([]);
+
+//     // Fetch products from DB
+//     const fetchProducts = async () => {
+//         setLoading(true);
+//         try {
+//             const res = await fetch('/api/admin/products');
+//             const data = await res.json();
+//             if (data.products) {
+//                 setProducts(data.products);
+//                 const prices = data.products.map(p => Number(p.retailPrice || 0));
+//                 setPriceBounds({ min: Math.min(...prices), max: Math.max(...prices) });
+//                 setPriceRange({ min: Math.min(...prices), max: Math.max(...prices) });
+//             }
+//         } catch (err) {
+//             console.error("Error fetching products:", err);
+//         } finally {
+//             setLoading(false);
+//         }
+//     };
+
+//     useEffect(() => {
+//         fetchProducts();
+//     }, []);
+
+//     // Get unique filter options
+//     const getUniqueOptions = (key) => {
+//         const allOptions = products.flatMap(product => {
+//             if (key === 'colors' || key === 'color') {
+//                 return Array.isArray(product.colors || product.color)
+//                     ? (product.colors || [])
+//                     : (product.color ? [product.color] : []);
+//             }
+//             return product[key] || '';
+//         });
+//         return [...new Set(allOptions.filter(Boolean))];
+//     };
+
+//     const uniqueCategories = getUniqueOptions('category');
+//     const uniqueColors = getUniqueOptions('color');
+//     const uniqueCollections = getUniqueOptions('collection');
+//     const uniqueFabrics = getUniqueOptions('fabric');
+
+//     const handleFilterChange = (setter, value) => {
+//         setter(prev =>
+//             prev.includes(value)
+//                 ? prev.filter(item => item !== value)
+//                 : [...prev, value]
+//         );
+//     };
+
+//     // Filtering logic
+//     const filteredData = products.filter(product => {
+//         const productPrice = Number(product.retailPrice || 0);
+//         const matchesGender = selectedGender === 'All' || product.gender === selectedGender;
+//         const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
+//         const productColors = Array.isArray(product.colors) ? product.colors : (product.color ? [product.color] : []);
+//         const matchesColor = selectedColors.length === 0 || selectedColors.some(color => productColors.includes(color));
+//         const matchesFabric = selectedFabrics.length === 0 || selectedFabrics.includes(product.fabric);
+//         const matchesPrice = productPrice >= priceRange.min && productPrice <= priceRange.max;
+//         const matchesCollection = selectedCollections.length === 0 || selectedCollections.includes(product.collection);
+//         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+//         return matchesGender && matchesCategory && matchesColor && matchesFabric && matchesPrice && matchesCollection && matchesSearch;
+//     });
+
+//     // Sorting
+//     const sortedData = [...filteredData].sort((a, b) => {
+//         const priceA = Number(a.retailPrice || 0);
+//         const priceB = Number(b.retailPrice || 0);
+//         if (sortOrder === 'price-asc') return priceA - priceB;
+//         if (sortOrder === 'price-desc') return priceB - priceA;
+//         if (sortOrder === 'alpha-asc') return a.name.localeCompare(b.name);
+//         return 0;
+//     });
+
+//     // Group products by category
+//     const groupedProducts = sortedData.reduce((acc, product) => {
+//         const category = product.category;
+//         if (!acc[category]) acc[category] = [];
+//         acc[category].push(product);
+//         return acc;
+//     }, {});
+
+//     if (loading) return <p className="text-center mt-12">Loading products...</p>;
+
+//     return (
+//         <>
+//             <CarouselComponent />
+//             <About />
+
+//             <div className="container mx-auto p-4 relative">
+//                 <h1 className="text-4xl font-bold text-center my-8">Our Products</h1>
+
+//                 {/* Gender + Sort + Filter */}
+//                 <div className="flex justify-between items-center mb-8">
+//                     <div className="flex space-x-4">
+//                         {['All', 'Men', 'Women'].map(g => (
+//                             <button
+//                                 key={g}
+//                                 onClick={() => setSelectedGender(g)}
+//                                 className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${selectedGender === g ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+//                             >
+//                                 {g}
+//                             </button>
+//                         ))}
+//                     </div>
+//                     <div className="flex items-center space-x-2">
+//                         <button
+//                             onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+//                             className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${isFilterPanelOpen ? 'bg-blue-800 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+//                         >
+//                             Filter
+//                         </button>
+//                         <label htmlFor="sort-select" className="font-semibold text-gray-700 ml-4">Sort by:</label>
+//                         <select
+//                             id="sort-select"
+//                             value={sortOrder}
+//                             onChange={(e) => setSortOrder(e.target.value)}
+//                             className="px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                         >
+//                             <option value="default">Default</option>
+//                             <option value="price-asc">Price: Low to High</option>
+//                             <option value="price-desc">Price: High to Low</option>
+//                             <option value="alpha-asc">Alphabetically: A-Z</option>
+//                         </select>
+//                     </div>
+//                 </div>
+
+//                 {/* Search */}
+//                 <div className="flex justify-end mt-6 mb-8">
+//                     <div className="flex items-center">
+//                         <input
+//                             type="text"
+//                             placeholder="Search by name..."
+//                             value={searchTerm}
+//                             onChange={(e) => setSearchTerm(e.target.value)}
+//                             className="border-2 border-white bg-transparent text-blue placeholder-gray-300 rounded-l-md p-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                         />
+//                         <button
+//                             className="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 transition"
+//                         >
+//                             Search
+//                         </button>
+//                     </div>
+//                 </div>
+
+//                 {/* Filter Panel */}
+//                 <div className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-xl p-6 transform transition-transform duration-300 z-50 overflow-y-auto ${isFilterPanelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+//                     {/* Use uniqueCategories, uniqueColors, etc. for filters */}
+//                 </div>
+
+//                 {/* Overlay */}
+//                 {isFilterPanelOpen && (
+//                     <div
+//                         className="fixed inset-0 bg-blue-900 opacity-50 z-40"
+//                         onClick={() => setIsFilterPanelOpen(false)}
+//                     ></div>
+//                 )}
+
+//                 {/* Products */}
+//                 {Object.keys(groupedProducts).length > 0 ? (
+//                     Object.keys(groupedProducts).map(category => (
+//                         <div key={category} className="mb-12">
+//                             <h2 className="text-3xl font-bold mt-8 mb-4 text-left">{category}</h2>
+//                             <hr className="my-4 border-2 border-blue-800" />
+//                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+//                                 {groupedProducts[category].map(product => (
+//                                     <Card key={product.id} foodData={product} user={user} />
+//                                 ))}
+//                             </div>
+//                         </div>
+//                     ))
+//                 ) : (
+//                     <p className="text-center text-xl mt-12">No products match your filter criteria.</p>
+//                 )}
+//             </div>
+//         </>
+//     );
+// }
+
+
+
 'use client';
 
 import React, { useState, useEffect } from "react";
@@ -458,15 +666,73 @@ export default function Home() {
 
                 {/* Filter Panel */}
                 <div className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-xl p-6 transform transition-transform duration-300 z-50 overflow-y-auto ${isFilterPanelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                    {/* Use uniqueCategories, uniqueColors, etc. for filters */}
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-xl font-bold">Filters</h3>
+                        <button onClick={() => setIsFilterPanelOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+                    </div>
+
+                    {/* Category */}
+                    <div className="mb-6">
+                        <h4 className="font-bold mb-2">Category</h4>
+                        {uniqueCategories.map(cat => (
+                            <label key={cat} className="flex items-center space-x-2 mb-1">
+                                <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => handleFilterChange(setSelectedCategories, cat)} className="rounded text-blue-600" />
+                                <span>{cat}</span>
+                            </label>
+                        ))}
+                    </div>
+
+                    {/* Fabric */}
+                    <div className="mb-6">
+                        <h4 className="font-bold mb-2">Fabric</h4>
+                        {uniqueFabrics.map(fab => (
+                            <label key={fab} className="flex items-center space-x-2 mb-1">
+                                <input type="checkbox" checked={selectedFabrics.includes(fab)} onChange={() => handleFilterChange(setSelectedFabrics, fab)} className="rounded text-blue-600" />
+                                <span>{fab}</span>
+                            </label>
+                        ))}
+                    </div>
+
+                    {/* Collection */}
+                    <div className="mb-6">
+                        <h4 className="font-bold mb-2">Collection</h4>
+                        {uniqueCollections.map(col => (
+                            <label key={col} className="flex items-center space-x-2 mb-1">
+                                <input type="checkbox" checked={selectedCollections.includes(col)} onChange={() => handleFilterChange(setSelectedCollections, col)} className="rounded text-blue-600" />
+                                <span>{col}</span>
+                            </label>
+                        ))}
+                    </div>
+
+                    {/* Color */}
+                    <div className="mb-6">
+                        <h4 className="font-bold mb-2">Colors</h4>
+                        <div className="flex flex-wrap gap-2">
+                            {uniqueColors.map(color => (
+                                <button key={color} onClick={() => handleFilterChange(setSelectedColors, color)}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-full border transition ${selectedColors.includes(color) ? 'border-black scale-105' : 'border-gray-300'}`}>
+                                    <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: color }}></span>
+                                    <span className="text-sm">{color}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Price Range */}
+                    <div className="mb-6">
+                        <h4 className="font-bold mb-2">Price Range</h4>
+                        <div className="flex items-center space-x-2">
+                            <input type="number" min={priceBounds.min} max={priceBounds.max} value={priceRange.min} onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })} className="w-1/2 p-2 border rounded-md" />
+                            <span>to</span>
+                            <input type="number" min={priceBounds.min} max={priceBounds.max} value={priceRange.max} onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })} className="w-1/2 p-2 border rounded-md" />
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">Range: {priceBounds.min} – {priceBounds.max}</p>
+                    </div>
                 </div>
 
                 {/* Overlay */}
                 {isFilterPanelOpen && (
-                    <div
-                        className="fixed inset-0 bg-blue-900 opacity-50 z-40"
-                        onClick={() => setIsFilterPanelOpen(false)}
-                    ></div>
+                    <div className="fixed inset-0 bg-blue-900 opacity-50 z-40" onClick={() => setIsFilterPanelOpen(false)}></div>
                 )}
 
                 {/* Products */}
